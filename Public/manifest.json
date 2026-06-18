@@ -1,0 +1,11 @@
+{
+	"name": "Softcore_Mode",
+	"version_number": "0.0.1",
+	"website_url": "https://github.com/GymMed/Outward-Softcore-Mode",
+	"description": "Softcore — Hardcore with backups. A new game mode that lets you experience the thrill of being punished on death, without needing to start everything from zero.",
+	"dependencies": [
+		"GymMed-Mods_Communicator-1.2.0",
+		"sinai-dev-SideLoader-3.8.4",
+		"BepInEx-BepInExPack_Outward-5.4.19"
+	]
+}
