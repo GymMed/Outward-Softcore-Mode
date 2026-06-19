@@ -1,45 +1,41 @@
-﻿using OutwardSoftcoreMode.Utility.Enums;
-using OutwardModsCommunicator.EventBus;
+﻿using OutwardModsCommunicator.EventBus;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OutwardSoftcoreMode.Events
 {
     public static class EventBusRegister
     {
-        private static readonly (string key, Type type, string description)[] ExampleGroupParams =
-        {
-            EventRegistryParamsHelper.Get(EventRegistryParams.CallerGUID),
-            EventRegistryParamsHelper.Get(EventRegistryParams.TryEnchantMenu),
-        };
-
         public static void RegisterEvents()
         {
-            // Let's register our listener event to provide what kind of parameters we expect for others to see
-            // This is not required. Just helper for others and good practice.
             EventBus.RegisterEvent(
                 OutwardSoftcoreMode.EVENTS_LISTENER_GUID,
-                EventBusSubscriber.Event_ExecuteMyCode,
-                "My code/method description",
-                EventRegistryParamsHelper.Get(EventRegistryParams.CallerGUID)
+                EventBusKeys.GetEventName(EventName.SaveBackupBefore),
+                "Fired before a manual backup is created.",
+                (EventBusKeys.GetParamName(EventParam.CallerUID), typeof(string), "The UID of the character whose save triggered the backup.")
             );
 
-            /*
-            // Example of grouping groups and single parameters for reusable cases
             EventBus.RegisterEvent(
                 OutwardSoftcoreMode.EVENTS_LISTENER_GUID,
-                EventBusSubscriber.Event_ExecuteMyCode,
-                "My code/method description",
-                EventRegistryParamsHelper.Combine(
-                    EventRegistryParamsHelper.Get(EventRegistryParams.CallerGUID),
-                    EventRegistryParamsHelper.Get(EventRegistryParams.TryEnchantMenu),
-                    ExampleGroupParams
-                )
+                EventBusKeys.GetEventName(EventName.SaveBackupAfter),
+                "Fired after a manual backup is created.",
+                (EventBusKeys.GetParamName(EventParam.CallerUID), typeof(string), "The UID of the character whose save was backed up.")
             );
-            */
+
+            EventBus.RegisterEvent(
+                OutwardSoftcoreMode.EVENTS_LISTENER_GUID,
+                EventBusKeys.GetEventName(EventName.DeathRollBefore),
+                "Fired before the death roll is made for softcore characters.",
+                (EventBusKeys.GetParamName(EventParam.SoftcoreUIDs), typeof(List<string>), "List of UIDs for all softcore characters at 0 HP.")
+            );
+
+            EventBus.RegisterEvent(
+                OutwardSoftcoreMode.EVENTS_LISTENER_GUID,
+                EventBusKeys.GetEventName(EventName.DeathRollAfter),
+                "Fired after the death roll is made for softcore characters.",
+                (EventBusKeys.GetParamName(EventParam.RollResult), typeof(bool), "True if death was triggered, false if survived."),
+                (EventBusKeys.GetParamName(EventParam.AffectedUIDs), typeof(List<string>), "List of UIDs whose death count was incremented (empty if survived).")
+            );
         }
     }
 }

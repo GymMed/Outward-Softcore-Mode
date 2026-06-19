@@ -1,4 +1,5 @@
 using HarmonyLib;
+using OutwardSoftcoreMode.Events;
 using OutwardSoftcoreMode.Services;
 
 namespace OutwardSoftcoreMode.Patches
@@ -29,6 +30,7 @@ namespace OutwardSoftcoreMode.Patches
             string name = GetLocalCharacterNameByUID(uid);
             SoftcoreSaveManager.EnsureMetadataExists(uid, name);
             SoftcoreSaveManager.CreateBackup(uid, timestamp);
+            EventBusPublisher.PublishSaveBackupAfter(uid);
 
             OutwardSoftcoreMode.PendingManualBackupUIDs.Remove(uid);
             OutwardSoftcoreMode.LogMessage("Manual softcore backup completed");

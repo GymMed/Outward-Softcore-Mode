@@ -1,4 +1,5 @@
 using HarmonyLib;
+using OutwardSoftcoreMode.Events;
 using OutwardSoftcoreMode.Services;
 using UnityEngine;
 using UnityEngine.Events;
@@ -115,6 +116,9 @@ namespace OutwardSoftcoreMode.Patches
 
             if (OutwardSoftcoreMode.PendingManualBackupUIDs.Count > 0)
             {
+                foreach (string uid in OutwardSoftcoreMode.PendingManualBackupUIDs)
+                    EventBusPublisher.PublishSaveBackupBefore(uid);
+
                 foreach (var menu in Resources.FindObjectsOfTypeAll<PauseMenu>())
                 {
                     if (!menu.isActiveAndEnabled) continue;

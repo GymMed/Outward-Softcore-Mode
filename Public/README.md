@@ -162,7 +162,7 @@ In split-screen, each player's softcore status is tracked independently via per-
 <details>
 <summary><b>Backup Cooldown & Limits</b> — configurable in-game time cooldown between manual backups and automatic pruning of old backups.</summary>
 
-The backup cooldown uses in-game time (tracked by the game's clock), not real-world time, so it only counts time spent playing with the save loaded. The cooldown defaults to 24 in-game hours and can be set to 0 to disable it entirely. For characters restored from backup, the cooldown initialization is deferred until the game time becomes valid (after scene loading completes). The backup limit (default 10) automatically removes the oldest backup instances when exceeded.
+The backup cooldown uses in-game time (tracked by the game's clock), not real-world time, so it only counts time spent playing with the save loaded. The static cooldown defaults to 24 in-game hours and can be set to 0 to disable it entirely. A cooldown randomizer can be enabled to roll a random cooldown between a configurable min and max (default 24–168 hours) each time a backup is created. For characters restored from backup, the cooldown initialization is deferred until the game time becomes valid (after scene loading completes). The backup limit (default 10) automatically removes the oldest backup instances when exceeded.
 
 <details>
 <summary>Save Backup button in the pause menu, colored purple</summary>
@@ -180,23 +180,99 @@ The backup cooldown uses in-game time (tracked by the game's clock), not real-wo
 <summary><b>Technical Details</b></summary>
 
 - **Cooldown storage:** `LastBackupGameTime` field in metadata XML at `BepInEx/config/gymmed.Mods_Communicator/Softcore_Mode/Characters/{UID}.xml`. Uses `EnvironmentConditions.GameTimeF` (in-game float time).
-- **Cooldown check:** `CanBackupNow(uid)` returns `true` if `(currentGameTime - lastBackupTime) >= SaveCooldownHours` or if cooldown is 0 (disabled).
-- **Deferred initialization for restored characters:** When a restored character is loaded (`Patch_Character_LoadPlayerSave`), the UID is added to `PendingCooldownUIDs`. In `OutwardSoftcoreMode.Update()`, once `EnvironmentConditions.GameTimeF > 0f`, the cooldown is initialized and the restored marker is cleared.
+- **Cooldown check:** `CanBackupNow(uid)` returns `true` if `(currentGameTime - lastBackupTime) >= storedCooldownDuration` or if cooldown is 0 (disabled). Falls back to `SaveCooldownHours` config when no per-character duration is stored.
+- **Cooldown randomizer:** When `CooldownRandomizerEnabled` is true, each backup rolls `Random.Range(CooldownRandomizerMinHours, CooldownRandomizerMaxHours)` and stores the result as `CooldownDuration` in the character metadata XML.
+- **Deferred initialization for restored characters:** When a restored character is loaded (`Patch_Character_LoadPlayerSave`), the UID is added to `PendingCooldownUIDs`. In `OutwardSoftcoreMode.Update()`, once `EnvironmentConditions.GameTimeF > 0f`, the cooldown is initialized and the restored flag is cleared.
 - **Backup limit enforcement:** `EnforceBackupLimit(uid)` sorts backup directories by name descending, deletes the oldest ones exceeding `MaxBackups`. Each backup is a full timestamp directory under `BepInEx/config/gymmed.Mods_Communicator/Softcore_Mode/Backups/{uid}/`.
-- **Config:** `SaveCooldownHours` (float, 0-any, default 24), `MaxBackups` (int, 1-any, default 10).
+- **Config:** `SaveCooldownHours` (float, 0-any, default 24), `CooldownRandomizerEnabled` (bool, default false), `CooldownRandomizerMinHours` (float, 0-any, default 24), `CooldownRandomizerMaxHours` (float, 0-any, default 168), `MaxBackups` (int, 1-any, default 10).
 
 </details>
 </details>
+
+## Publish/Subscribe
+
+This mod uses [Mods Communicator](https://github.com/GymMed/Outward-Mods-Communicator) for event-driven communication between mods.
+
+### Publish
+
+These events are published by Softcore Mode. Other mods can subscribe to them to react to in-game events.
+
+<details>
+<summary>SaveBackupBefore</summary>
+
+Fired before a manual backup is created. The `callerUID` parameter contains the UID of the character who triggered the save.
+
+```csharp
+EventBus.Subscribe("gymmed.softcore_mode_*", "SaveBackupBefore", payload =>
+{
+    string callerUID = payload.Get<string>("callerUID", null);
+    if (string.IsNullOrEmpty(callerUID)) return;
+    // Your code here
+});
+```
+</details>
+
+<details>
+<summary>SaveBackupAfter</summary>
+
+Fired after a manual backup is created. The `callerUID` parameter contains the UID of the backed-up character.
+
+```csharp
+EventBus.Subscribe("gymmed.softcore_mode_*", "SaveBackupAfter", payload =>
+{
+    string callerUID = payload.Get<string>("callerUID", null);
+    if (string.IsNullOrEmpty(callerUID)) return;
+    // Your code here
+});
+```
+</details>
+
+<details>
+<summary>DeathRollBefore</summary>
+
+Fired before the permanent death roll is made. The `softcoreUIDs` parameter contains the list of UIDs for all softcore characters at 0 HP.
+
+```csharp
+EventBus.Subscribe("gymmed.softcore_mode_*", "DeathRollBefore", payload =>
+{
+    var uids = payload.Get<List<string>>("softcoreUIDs", null);
+    if (uids == null || uids.Count == 0) return;
+    // Your code here
+});
+```
+</details>
+
+<details>
+<summary>DeathRollAfter</summary>
+
+Fired after the death roll is made. The `rollResult` parameter indicates if death was triggered, and `affectedUIDs` lists the characters whose death count was incremented.
+
+```csharp
+EventBus.Subscribe("gymmed.softcore_mode_*", "DeathRollAfter", payload =>
+{
+    bool deathTriggered = payload.Get<bool>("rollResult", false);
+    var affectedUIDs = payload.Get<List<string>>("affectedUIDs", null);
+    // Your code here
+});
+```
+</details>
+
+### Subscribe
+
+Softcore Mode does not subscribe to external events. All events listed above are published for other mods to subscribe to.
 
 ## Configuration
 
 All settings are in `BepInEx/config/gymmed.softcore_mode.cfg` and can be edited with any text editor or through r2modman's config editor.
 
-| Setting             | Type         | Default | Description                                                                             |
-| ------------------- | ------------ | ------- | --------------------------------------------------------------------------------------- |
-| `DeathChance`       | int (20–100) | 20      | Permanent death chance on defeat (%)                                                    |
-| `MaxBackups`        | int          | 10      | Max backup instances kept per character. Oldest are auto-deleted when limit is exceeded |
-| `SaveCooldownHours` | float        | 24.0    | Minimum in-game hours between manual backups. Set to 0 to disable cooldown              |
+| Setting                     | Type         | Default | Description                                                                             |
+| --------------------------- | ------------ | ------- | --------------------------------------------------------------------------------------- |
+| `DeathChance`               | int (20–100) | 20      | Permanent death chance on defeat (%)                                                    |
+| `MaxBackups`                | int          | 10      | Max backup instances kept per character. Oldest are auto-deleted when limit is exceeded |
+| `SaveCooldownHours`         | float        | 24.0    | Minimum in-game hours between manual backups. Set to 0 to disable cooldown              |
+| `CooldownRandomizerEnabled` | bool         | false   | Enables random cooldown range for backup saves                                          |
+| `CooldownRandomizerMinHours`| float        | 24.0    | Minimum random cooldown in game hours                                                   |
+| `CooldownRandomizerMaxHours`| float        | 168.0   | Maximum random cooldown in game hours                                                   |
 
 ## Data Storage
 

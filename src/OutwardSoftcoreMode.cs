@@ -22,7 +22,7 @@ namespace OutwardSoftcoreMode
     {
         public const string GUID = "gymmed.softcore_mode";
         public const string NAME = "Softcore Mode";
-        public const string VERSION = "0.0.2";
+        public const string VERSION = "0.1.0";
 
         public static string prefix = "[Softcore-Mode]";
 
@@ -30,9 +30,12 @@ namespace OutwardSoftcoreMode
 
         internal static ManualLogSource Log;
 
-        public static ConfigEntry<int> MaxBackups => BackupsConfigs.MaxBackups;
+		public static ConfigEntry<int> MaxBackups => BackupsConfigs.MaxBackups;
         public static ConfigEntry<float> SaveCooldownHours => SaveCooldownConfigs.SaveCooldownHours;
         public static ConfigEntry<int> DeathChance => DeathChanceConfigs.DeathChance;
+        public static ConfigEntry<bool> CooldownRandomizerEnabled => CooldownRandomizerConfigs.CooldownRandomizerEnabled;
+        public static ConfigEntry<float> CooldownRandomizerMinHours => CooldownRandomizerConfigs.CooldownRandomizerMinHours;
+        public static ConfigEntry<float> CooldownRandomizerMaxHours => CooldownRandomizerConfigs.CooldownRandomizerMaxHours;
 
         public static bool IsCurrentGameSoftcore;
         internal static int PendingSoftcoreCount;
@@ -47,11 +50,11 @@ namespace OutwardSoftcoreMode
             BackupsConfigs.Init(this);
             SaveCooldownConfigs.Init(this);
             DeathChanceConfigs.Init(this);
+            CooldownRandomizerConfigs.Init(this);
 
             new Harmony(GUID).PatchAll();
 
             EventBusRegister.RegisterEvents();
-            //EventBusSubscriber.AddSubscribers();
         }
 
         internal void Update()

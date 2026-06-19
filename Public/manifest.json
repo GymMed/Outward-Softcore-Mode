@@ -1,6 +1,6 @@
 {
 	"name": "Softcore_Mode",
-	"version_number": "0.0.2",
+	"version_number": "0.1.0",
 	"website_url": "https://github.com/GymMed/Outward-Softcore-Mode",
 	"description": "Softcore — Hardcore with backups. A new game mode that lets you experience the thrill of being punished on death, without needing to start everything from zero.",
 	"dependencies": [

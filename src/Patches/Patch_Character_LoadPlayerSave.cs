@@ -14,10 +14,9 @@ namespace OutwardSoftcoreMode.Patches
             if (!OutwardSoftcoreMode.IsCurrentGameSoftcore)
                 return;
 
-            if (MarkerFileService.HasRestoredMarker(uid))
+            if (SoftcoreSaveManager.IsRestoredBackupCharacter(uid))
             {
                 OutwardSoftcoreMode.PendingCooldownUIDs.Add(uid);
-                MarkerFileService.DeleteRestoredMarker(uid);
                 SoftcoreSaveManager.ClearRestoredFlag(uid);
                 OutwardSoftcoreMode.DebugLog($"Cooldown deferred for restored character {uid}");
             }

@@ -62,7 +62,8 @@ namespace OutwardSoftcoreMode.Services
                 new XElement("SoftcoreCharacter",
                     new XElement("Name", name ?? "Unknown"),
                     new XElement("PermanentDeathCount", 0),
-                    new XElement("LastBackupGameTime", -1)
+                    new XElement("LastBackupGameTime", -1),
+                    new XElement("CooldownDuration", -1f)
                 )
             );
             doc.Save(SoftcorePaths.GetMetadataPath(uid));
@@ -146,34 +147,26 @@ namespace OutwardSoftcoreMode.Services
             });
         }
 
-        public static bool CanBackupNow(string uid)
+        private static (bool canBackup, float remainingTime) GetCooldownState(string uid)
         {
-            float cooldown = OutwardSoftcoreMode.SaveCooldownHours?.Value ?? 24f;
-            if (cooldown <= 0f)
-                return true;
+            float configCooldown = OutwardSoftcoreMode.SaveCooldownHours?.Value ?? 24f;
+            if (configCooldown <= 0f)
+                return (true, 0f);
 
             float lastBackup = GetLastBackupGameTime(uid);
             if (lastBackup < 0f)
-                return true;
+                return (true, 0f);
 
-            float currentTime = EnvironmentConditions.GameTimeF;
-            return (currentTime - lastBackup) >= cooldown;
-        }
-
-        public static float GetRemainingCooldownTime(string uid)
-        {
-            float cooldown = OutwardSoftcoreMode.SaveCooldownHours?.Value ?? 24f;
-            if (cooldown <= 0f)
-                return 0f;
-
-            float lastBackup = GetLastBackupGameTime(uid);
-            if (lastBackup < 0f)
-                return 0f;
-
+            float storedDuration = ReadStoredCooldownDuration(uid, configCooldown);
             float currentTime = EnvironmentConditions.GameTimeF;
             float elapsed = currentTime - lastBackup;
-            return Math.Max(0f, cooldown - elapsed);
+            float remaining = Math.Max(0f, storedDuration - elapsed);
+            return (elapsed >= storedDuration, remaining);
         }
+
+        public static bool CanBackupNow(string uid) => GetCooldownState(uid).canBackup;
+
+        public static float GetRemainingCooldownTime(string uid) => GetCooldownState(uid).remainingTime;
 
         public static string GetCharacterSaveDirectory(string uid) =>
             Path.Combine(SaveManager.GetSavePath(), $"Save_{uid}");
@@ -196,6 +189,29 @@ namespace OutwardSoftcoreMode.Services
             return Directory.Exists(Path.Combine(SoftcorePaths.GetBackupsDir(uid), instancePath));
         }
 
+        private static float ReadStoredCooldownDuration(string uid, float fallback)
+        {
+            var doc = LoadMetadataOrNull(uid);
+            if (doc == null)
+                return fallback;
+            var element = doc.Root?.Element("CooldownDuration");
+            if (element != null && float.TryParse(element.Value, out float duration) && duration > 0f)
+                return duration;
+            return fallback;
+        }
+
+        private static void WriteCooldownDuration(string uid, float duration)
+        {
+            ModifyMetadata(uid, root =>
+            {
+                var element = root.Element("CooldownDuration");
+                if (element != null)
+                    element.Value = duration.ToString("F2");
+                else
+                    root.Add(new XElement("CooldownDuration", duration.ToString("F2")));
+            });
+        }
+
         public static void CreateBackup(string uid, string instanceTimestamp)
         {
             if (string.IsNullOrEmpty(uid) || string.IsNullOrEmpty(instanceTimestamp))
@@ -216,8 +232,22 @@ namespace OutwardSoftcoreMode.Services
             OutwardSoftcoreMode.LogMessage($"Backup created for {uid} at {instanceTimestamp}");
 
             float gameTime = EnvironmentConditions.GameTimeF;
+            float cooldownDuration;
+
+            if (OutwardSoftcoreMode.CooldownRandomizerEnabled?.Value == true)
+            {
+                float min = OutwardSoftcoreMode.CooldownRandomizerMinHours?.Value ?? 24f;
+                float max = OutwardSoftcoreMode.CooldownRandomizerMaxHours?.Value ?? 168f;
+                cooldownDuration = UnityEngine.Random.Range(min, max);
+            }
+            else
+            {
+                cooldownDuration = OutwardSoftcoreMode.SaveCooldownHours?.Value ?? 24f;
+            }
+
             BackupMetadataStore.WriteGameTime(uid, instanceTimestamp, gameTime);
             SetLastBackupGameTime(uid, gameTime);
+            WriteCooldownDuration(uid, cooldownDuration);
 
             EnforceBackupLimit(uid);
         }
@@ -386,7 +416,6 @@ namespace OutwardSoftcoreMode.Services
             }
 
             SetRestoredFlag(uid);
-            MarkerFileService.WriteRestoredMarker(uid);
             RegisterRestoredCharacter(uid);
         }
 

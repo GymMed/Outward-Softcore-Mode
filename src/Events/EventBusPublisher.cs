@@ -1,28 +1,45 @@
-﻿using OutwardSoftcoreMode.Utility.Enums;
-using OutwardModsCommunicator.EventBus;
-using System;
+﻿using OutwardModsCommunicator.EventBus;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OutwardSoftcoreMode.Events
 {
     public static class EventBusPublisher
     {
-        // Outward Game Settings mod has better examples.
-        public const string Event_NameFromOtherMod = "GUID";
-
-        //other mods listener uid
-        public const string OtherMod_Listener = "GUID";
-
-        public static void SendYourMessage(string yourVariable)
+        public static void PublishSaveBackupBefore(string callerUID)
         {
             var payload = new EventPayload
             {
-                [EventRegistryParamsHelper.Get(EventRegistryParams.PlaceHolder).key] = yourVariable
+                [EventBusKeys.GetParamName(EventParam.CallerUID)] = callerUID
             };
-            EventBus.Publish(OtherMod_Listener, Event_NameFromOtherMod, payload);
+            EventBus.Publish(OutwardSoftcoreMode.EVENTS_LISTENER_GUID, EventBusKeys.GetEventName(EventName.SaveBackupBefore), payload);
+        }
+
+        public static void PublishSaveBackupAfter(string callerUID)
+        {
+            var payload = new EventPayload
+            {
+                [EventBusKeys.GetParamName(EventParam.CallerUID)] = callerUID
+            };
+            EventBus.Publish(OutwardSoftcoreMode.EVENTS_LISTENER_GUID, EventBusKeys.GetEventName(EventName.SaveBackupAfter), payload);
+        }
+
+        public static void PublishDeathRollBefore(List<string> softcoreUIDs)
+        {
+            var payload = new EventPayload
+            {
+                [EventBusKeys.GetParamName(EventParam.SoftcoreUIDs)] = softcoreUIDs
+            };
+            EventBus.Publish(OutwardSoftcoreMode.EVENTS_LISTENER_GUID, EventBusKeys.GetEventName(EventName.DeathRollBefore), payload);
+        }
+
+        public static void PublishDeathRollAfter(bool rollResult, List<string> affectedUIDs)
+        {
+            var payload = new EventPayload
+            {
+                [EventBusKeys.GetParamName(EventParam.RollResult)] = rollResult,
+                [EventBusKeys.GetParamName(EventParam.AffectedUIDs)] = affectedUIDs
+            };
+            EventBus.Publish(OutwardSoftcoreMode.EVENTS_LISTENER_GUID, EventBusKeys.GetEventName(EventName.DeathRollAfter), payload);
         }
     }
 }

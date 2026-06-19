@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using HarmonyLib;
+using OutwardSoftcoreMode.Events;
 using OutwardSoftcoreMode.Services;
 using UnityEngine;
 
@@ -45,6 +46,8 @@ namespace OutwardSoftcoreMode.Patches
 
 			if (anySoftcoreDead)
 			{
+				EventBusPublisher.PublishDeathRollBefore(new List<string>(softcoreUIDs));
+
 				int chance = OutwardSoftcoreMode.DeathChance?.Value ?? 20;
 				int roll = Random.Range(0, 100);
 
@@ -59,6 +62,8 @@ namespace OutwardSoftcoreMode.Patches
 					}
 					_deathTriggered = true;
 				}
+
+				EventBusPublisher.PublishDeathRollAfter(_deathTriggered, _deathTriggered ? new List<string>(softcoreUIDs) : new List<string>());
 			}
 
             if (_deathTriggered)
