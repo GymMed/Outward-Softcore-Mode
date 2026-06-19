@@ -22,7 +22,7 @@ namespace OutwardSoftcoreMode
     {
         public const string GUID = "gymmed.softcore_mode";
         public const string NAME = "Softcore Mode";
-        public const string VERSION = "0.0.1";
+        public const string VERSION = "0.0.2";
 
         public static string prefix = "[Softcore-Mode]";
 

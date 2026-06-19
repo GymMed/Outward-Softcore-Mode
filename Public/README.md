@@ -8,11 +8,11 @@
 </div>
 
 <div align="center">
-	<a href="https://thunderstore.io/c/outward/p/GymMed/Outward_Softcore_Mode/">
-		<img src="https://img.shields.io/thunderstore/dt/GymMed/Outward_Softcore_Mode" alt="Thunderstore Downloads">
+	<a href="https://thunderstore.io/c/outward/p/GymMed/Softcore_Mode/">
+		<img src="https://img.shields.io/thunderstore/dt/GymMed/Softcore_Mode" alt="Thunderstore Downloads">
 	</a>
 	<a href="https://github.com/GymMed/Outward-Softcore-Mode/releases/latest">
-		<img src="https://img.shields.io/thunderstore/v/GymMed/Outward_Softcore_Mode" alt="Thunderstore Version">
+		<img src="https://img.shields.io/thunderstore/v/GymMed/Softcore_Mode" alt="Thunderstore Version">
 	</a>
     <a href="https://github.com/GymMed/Outward-Mods-Communicator/releases/latest">
         <img src="https://img.shields.io/badge/Mods_Communicator-v1.2.0-9966ff" alt="Mods Communicator Version">
