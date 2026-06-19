@@ -110,8 +110,7 @@ When you reach the character select screen, the mod scans all backup directories
 
 - **Trigger points:** `SoftcoreSaveManager.RestoreOrphanedBackups()` is called from two Harmony Postfix patches: `CharacterSelectionPanel.OnEnable` (whenever the character select panel is shown) and `SaveManager.RetrieveCharacterSaves` (when saves are refreshed).
 - **Detection:** Compares each backup directory name (which is the character UID) against `SaveManager.Instance.CharacterSaves`. Restores any UID present in backups but absent from active saves.
-- **Restore flow:** Sorts backup instance directories by name descending (newest first) → for each backup, copies its contents to `Save_{uid}/{backup.Name}/` only if the destination doesn't already exist → sets `IsRestored=true` in metadata XML → writes a `.restored` marker file → registers the character via reflection by calling `CharacterSaveInstanceHolder.PrepareCharacterSaveInstanceHolder(uid, saveDir)` and adding the result to `SaveManager`'s private `m_charSaves` dictionary → refreshes all open character selection panels.
-- **Marker file:** `BepInEx/config/gymmed.Mods_Communicator/Softcore_Mode/{UID}.restored` — an empty file used on the character's next load to defer cooldown initialization until game time is valid.
+- **Restore flow:** Sorts backup instance directories by name descending (newest first) → for each backup, copies its contents to `Save_{uid}/{backup.Name}/` only if the destination doesn't already exist → sets `IsRestored=true` in metadata XML → registers the character via reflection by calling `CharacterSaveInstanceHolder.PrepareCharacterSaveInstanceHolder(uid, saveDir)` and adding the result to `SaveManager`'s private `m_charSaves` dictionary → refreshes all open character selection panels.
 
 </details>
 </details>
@@ -283,7 +282,6 @@ All mod data is stored under `BepInEx/config/gymmed.Mods_Communicator/Softcore_M
 | Character metadata (softcore flag, name, death count) | `Softcore_Mode/Characters/{UID}.xml`                                   |
 | Backup instances (full save copies)                   | `Softcore_Mode/Backups/{UID}/{instanceTimestamp}/`                     |
 | Backup instance game time                             | `Softcore_Mode/Backups/{UID}/{instanceTimestamp}/SoftcoreSaveData.xml` |
-| Restored marker (empty file)                          | `Softcore_Mode/{UID}.restored`                                         |
 
 ## Installation
 
