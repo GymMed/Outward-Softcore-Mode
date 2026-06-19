@@ -184,7 +184,7 @@ The backup cooldown uses in-game time (tracked by the game's clock), not real-wo
 - **Cooldown randomizer:** When `CooldownRandomizerEnabled` is true, each backup rolls `Random.Range(CooldownRandomizerMinHours, CooldownRandomizerMaxHours)` and stores the result as `CooldownDuration` in the character metadata XML.
 - **Deferred initialization for restored characters:** When a restored character is loaded (`Patch_Character_LoadPlayerSave`), the UID is added to `PendingCooldownUIDs`. In `OutwardSoftcoreMode.Update()`, once `EnvironmentConditions.GameTimeF > 0f`, the cooldown is initialized and the restored flag is cleared.
 - **Backup limit enforcement:** `EnforceBackupLimit(uid)` sorts backup directories by name descending, deletes the oldest ones exceeding `MaxBackups`. Each backup is a full timestamp directory under `BepInEx/config/gymmed.Mods_Communicator/Softcore_Mode/Backups/{uid}/`.
-- **Config:** `SaveCooldownHours` (float, 0-any, default 24), `CooldownRandomizerEnabled` (bool, default false), `CooldownRandomizerMinHours` (float, 0-any, default 24), `CooldownRandomizerMaxHours` (float, 0-any, default 168), `MaxBackups` (int, 1-any, default 10).
+- **Config:** `SaveCooldownHours` (float, 0-any, default 24), `CooldownRandomizerEnabled` (bool, default true), `CooldownRandomizerMinHours` (float, 0-any, default 24), `CooldownRandomizerMaxHours` (float, 0-any, default 168), `MaxBackups` (int, 1-any, default 10).
 
 </details>
 </details>
@@ -270,7 +270,7 @@ All settings are in `BepInEx/config/gymmed.softcore_mode.cfg` and can be edited 
 | `DeathChance`               | int (20–100) | 20      | Permanent death chance on defeat (%)                                                    |
 | `MaxBackups`                | int          | 10      | Max backup instances kept per character. Oldest are auto-deleted when limit is exceeded |
 | `SaveCooldownHours`         | float        | 24.0    | Minimum in-game hours between manual backups. Set to 0 to disable cooldown              |
-| `CooldownRandomizerEnabled` | bool         | false   | Enables random cooldown range for backup saves                                          |
+| `CooldownRandomizerEnabled` | bool         | true    | Enables random cooldown range for backup saves                                          |
 | `CooldownRandomizerMinHours`| float        | 24.0    | Minimum random cooldown in game hours                                                   |
 | `CooldownRandomizerMaxHours`| float        | 168.0   | Maximum random cooldown in game hours                                                   |
 
