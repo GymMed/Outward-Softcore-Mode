@@ -28,7 +28,7 @@
 ## Dependencies
 
 - [BepInEx-BepInExPack_Outward](https://outward.thunderstore.io/package/BepInEx/BepInExPack_Outward) (5.4.19)
-- [sinai-dev-SideLoader](https://outward.thunderstore.io/package/sinai/dev-SideLoader) (3.8.4)
+- [sinai-dev-SideLoader](https://outward.thunderstore.io/package/sinai-dev/SideLoader) (3.8.4)
 - [GymMed-Mods_Communicator](https://outward.thunderstore.io/package/GymMed/Mods_Communicator) (1.2.0)
 
 ## Features
